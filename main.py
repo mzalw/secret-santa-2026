@@ -16,80 +16,88 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Inicjalizacja wybranego motywu (domyślnie jasny)
+if "app_theme" not in st.session_state:
+    st.session_state.app_theme = "light"
+
+is_dark_theme = st.session_state.get("app_theme", "light") == "dark"
+
+if is_dark_theme:
+    h_color = "#ffffff"
+    bg_color = "#0f172a"
+    text_color = "#f8fafc"
+    card_bg = "#1e293b"
+    card_border = "#334155"
+else:
+    h_color = "#000000"
+    bg_color = "#f8fafc"
+    text_color = "#0f172a"
+    card_bg = "#ffffff"
+    card_border = "#cbd5e1"
+
 # Style CSS z pełnym wsparciem trybu ciemnego (Dark Mode) oraz jasnego (Light Mode)
-st.markdown("""
+st.markdown(f"""
 <style>
-    /* Powiększenie czcionki i uniwersalne kolory zależne od motywu */
-    html, body, [class*="css"], .stApp {
+    /* Powiększenie czcionki */
+    html, body, [class*="css"], .stApp {{
         font-size: 18px !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    }}
+
+    /* Dynamiczne tło i kolor tekstu */
+    .stApp, [data-testid="stAppViewContainer"] {{
+        background-color: {bg_color} !important;
+        color: {text_color} !important;
+    }}
     
-    /* DOMYŚLNIE I W WERSJI JASNEJ: NAGŁÓWKI SĄ CZARNE */
+    /* NAGŁÓWKI: W WERSJI JASNEJ ZAWSZE CZARNE (#000000), W CIEMNEJ BIAŁE (#FFFFFF) */
     h1, h2, h3, h4, h5, h6,
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+    .stMarkdown h4, .stMarkdown h5, .stMarkdown h6,
     [data-testid="stMarkdownContainer"] h1,
     [data-testid="stMarkdownContainer"] h2,
-    [data-testid="stMarkdownContainer"] h3 {
-        color: #000000 !important;
+    [data-testid="stMarkdownContainer"] h3,
+    [data-testid="stMarkdownContainer"] h4,
+    [data-testid="stMarkdownContainer"] h5,
+    [data-testid="stMarkdownContainer"] h6 {{
+        color: {h_color} !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    h1 {
+    }}
+    h1 {{
         font-size: 2.3rem !important;
         font-weight: 800 !important;
         margin-bottom: 0.2rem !important;
-    }
-    h2 {
+    }}
+    h2 {{
         font-size: 1.7rem !important;
         font-weight: 700 !important;
-    }
-    h3 {
+    }}
+    h3 {{
         font-size: 1.35rem !important;
         font-weight: 700 !important;
-    }
+    }}
 
-    /* W WERSJI CIEMNEJ (DARK MODE): NAGŁÓWKI MUSZĄ BYĆ BIAŁE */
-    @media (prefers-color-scheme: dark) {
-        h1, h2, h3, h4, h5, h6,
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
-        [data-testid="stMarkdownContainer"] h1,
-        [data-testid="stMarkdownContainer"] h2,
-        [data-testid="stMarkdownContainer"] h3 {
-            color: #ffffff !important;
-        }
-    }
-    
-    /* Wsparcie dla motywu ciemnego wybranego w ustawieniach Streamlit */
+    /* Wsparcie dla natywnego motywu ciemnego wybranego w Streamlit */
     [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
-    [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
     [data-base-theme="dark"] h1, [data-base-theme="dark"] h2, [data-base-theme="dark"] h3,
-    .stApp[data-theme="dark"] h1, .stApp[data-theme="dark"] h2, .stApp[data-theme="dark"] h3,
-    .stApp[data-base-theme="dark"] h1, .stApp[data-base-theme="dark"] h2, .stApp[data-base-theme="dark"] h3,
-    [data-testid="stAppViewContainer"][data-theme="dark"] h1,
-    [data-testid="stAppViewContainer"][data-theme="dark"] h2,
-    [data-testid="stAppViewContainer"][data-theme="dark"] h3 {
+    .stApp[data-theme="dark"] h1, .stApp[data-theme="dark"] h2, .stApp[data-theme="dark"] h3 {{
         color: #ffffff !important;
-    }
+    }}
 
-    /* Gdy w Streamlit jawnie ustawiony jest motyw jasny */
+    /* Wsparcie dla natywnego motywu jasnego w Streamlit */
     [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
-    [data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6,
     [data-base-theme="light"] h1, [data-base-theme="light"] h2, [data-base-theme="light"] h3,
-    .stApp[data-theme="light"] h1, .stApp[data-theme="light"] h2, .stApp[data-theme="light"] h3,
-    .stApp[data-base-theme="light"] h1, .stApp[data-base-theme="light"] h2, .stApp[data-base-theme="light"] h3,
-    [data-testid="stAppViewContainer"][data-theme="light"] h1,
-    [data-testid="stAppViewContainer"][data-theme="light"] h2,
-    [data-testid="stAppViewContainer"][data-theme="light"] h3 {
+    .stApp[data-theme="light"] h1, .stApp[data-theme="light"] h2, .stApp[data-theme="light"] h3 {{
         color: #000000 !important;
-    }
+    }}
     
-    /* Zapewnienie czytelności tekstów w trybie ciemnym */
-    .stMarkdown, .stText, p, span, label {
-        color: var(--text-color) !important;
-    }
+    /* Zapewnienie czytelności zwykłych tekstów */
+    .stMarkdown p, .stMarkdown span, .stText, p, span, label {{
+        color: {text_color} !important;
+    }}
     
     /* Duże przyciski dotykowe */
-    .stButton > button {
+    .stButton > button {{
         min-height: 54px !important;
         font-size: 1.15rem !important;
         font-weight: 700 !important;
@@ -97,61 +105,61 @@ st.markdown("""
         padding: 12px 24px !important;
         transition: all 0.2s ease !important;
         border: 1.5px solid transparent !important;
-    }
+    }}
     
     /* Główne przyciski w świątecznym czerwonym kolorze */
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"] {{
         background-color: #dc2626 !important;
         color: #ffffff !important;
         border-color: #b91c1c !important;
-    }
-    .stButton > button[kind="primary"]:hover {
+    }}
+    .stButton > button[kind="primary"]:hover {{
         background-color: #b91c1c !important;
         transform: translateY(-1px);
-    }
+    }}
     
     /* Formularze i pola wprowadzania */
-    .stSelectbox, .stTextInput, .stNumberInput {
+    .stSelectbox, .stTextInput, .stNumberInput {{
         font-size: 1.15rem !important;
-    }
-    input {
+    }}
+    input {{
         font-size: 1.15rem !important;
         padding: 10px 14px !important;
-    }
+    }}
 
-    /* Pasek stanu etapu - dopasowuje się do tła użytkownika */
-    .stage-banner {
-        background-color: var(--secondary-background-color, rgba(128, 128, 128, 0.1));
-        border: 2px solid var(--border-color, rgba(148, 163, 184, 0.35));
+    /* Pasek stanu etapu */
+    .stage-banner {{
+        background-color: {card_bg};
+        border: 2px solid {card_border};
         border-radius: 16px;
         padding: 18px 22px;
         margin-bottom: 24px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    }
-    .stage-badge {
+    }}
+    .stage-badge {{
         display: inline-block;
         padding: 7px 16px;
         border-radius: 30px;
         font-size: 1rem;
         font-weight: 800;
         margin-right: 10px;
-    }
-    .badge-active {
+    }}
+    .badge-active {{
         background-color: #dc2626;
         color: #ffffff !important;
-    }
-    .badge-done {
+    }}
+    .badge-done {{
         background-color: #16a34a;
         color: #ffffff !important;
-    }
-    .badge-locked {
-        background-color: var(--secondary-background-color, rgba(148, 163, 184, 0.2));
-        color: var(--text-color) !important;
+    }}
+    .badge-locked {{
+        background-color: rgba(148, 163, 184, 0.2);
+        color: {text_color} !important;
         border: 1.5px solid rgba(148, 163, 184, 0.4);
-    }
+    }}
     
-    /* Karta wylosowanej osoby w Etapie 2 */
-    .gift-box {
+    /* Karta wylosowanej osoby w Etapie 2 - zawsze białe napisy na czerwonym tle */
+    .gift-box {{
         background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
         color: #ffffff !important;
         padding: 32px;
@@ -160,33 +168,33 @@ st.markdown("""
         box-shadow: 0 12px 28px -5px rgba(185, 28, 28, 0.5);
         margin: 20px 0;
         border: 2px solid #ef4444;
-    }
-    .gift-box h1, .gift-box div {
+    }}
+    .gift-box h1, .gift-box div {{
         color: #ffffff !important;
-    }
-    .gift-box h1 {
+    }}
+    .gift-box h1 {{
         font-size: 2.8rem !important;
         margin: 12px 0 !important;
-    }
+    }}
 
     /* Karta informacyjna / pomocnicza */
-    .info-card {
-        background-color: var(--secondary-background-color, rgba(128, 128, 128, 0.1));
-        border: 2px solid var(--border-color, rgba(148, 163, 184, 0.3));
+    .info-card {{
+        background-color: {card_bg};
+        border: 2px solid {card_border};
         border-radius: 14px;
         padding: 16px 20px;
         margin-bottom: 20px;
-        color: var(--text-color);
-    }
+        color: {text_color};
+    }}
 
     /* Karta ostrzegawcza w panelu administratora */
-    .danger-card {
+    .danger-card {{
         background-color: rgba(220, 38, 38, 0.1);
         border: 2px solid #ef4444;
         border-radius: 14px;
         padding: 16px 20px;
         margin-bottom: 20px;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -458,7 +466,15 @@ current_stage = 2 if (is_stage_1_complete and is_drawn) else 1
 # 6. GŁÓWNY INTERFEJS STREAMLIT DLA RODZINY
 # ==============================================================================
 
-st.markdown("<h1>🎅 Losowanie prezentów u Zalewskich 2026</h1>", unsafe_allow_html=True)
+c_title, c_theme = st.columns([4, 1])
+with c_title:
+    st.markdown("<h1>🎅 Losowanie prezentów u Zalewskich 2026</h1>", unsafe_allow_html=True)
+with c_theme:
+    is_dark = st.session_state.get("app_theme", "light") == "dark"
+    btn_label = "☀️ Tryb jasny" if is_dark else "🌙 Tryb ciemny"
+    if st.button(btn_label, key="theme_toggle_btn", use_container_width=True):
+        st.session_state.app_theme = "light" if is_dark else "dark"
+        st.rerun()
 
 # Pasek stanu 2 etapów
 b1_class = "badge-done" if current_stage == 2 else "badge-active"
