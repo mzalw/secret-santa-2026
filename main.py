@@ -10,7 +10,7 @@ import os
 # 1. KONFIGURACJA STRONY I STYLE DLA SENIORÓW (WYSOKI KONTRAST, DUŻA CZCIONKA)
 # ==============================================================================
 st.set_page_config(
-    page_title="Świąteczny Secret Santa dla Rodziny",
+    page_title="Losowanie prezentów u Zalewskich 2026",
     page_icon="🎅",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -379,7 +379,7 @@ current_stage = 2 if (is_stage_1_complete and is_drawn) else 1
 # 6. GŁÓWNY INTERFEJS STREAMLIT DLA RODZINY
 # ==============================================================================
 
-st.markdown("<h1>🎅 Świąteczny Secret Santa dla Rodziny</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎅 Losowanie prezentów u Zalewskich 2026</h1>", unsafe_allow_html=True)
 
 # Pasek stanu 2 etapów
 b1_class = "badge-done" if current_stage == 2 else "badge-active"
@@ -554,7 +554,7 @@ elif current_stage == 2:
                 # Przygotowanie wiadomości na WhatsApp i SMS
                 wishes_formatted = "\\n".join([f"{i+1}. {w}" for i, w in enumerate(receiver_wishes)])
                 sms_text = (
-                    f"🎁 Cześć {reveal_user}! W rodzinnym Secret Santa wylosowałeś(aś): {receiver}! "
+                    f"🎁 Cześć {reveal_user}! W losowaniu prezentów u Zalewskich 2026 wylosowałeś(aś): {receiver}! "
                     f"Budżet: {st.session_state.official_budget} zł. "
                     f"Pomysły na prezent: {wishes_formatted}. Wesołych Świąt!"
                 )
