@@ -77,22 +77,36 @@ st.markdown(f"""
     [data-testid="stMarkdownContainer"] h3,
     [data-testid="stMarkdownContainer"] h4,
     [data-testid="stMarkdownContainer"] h5,
-    [data-testid="stMarkdownContainer"] h6 {{
+    [data-testid="stMarkdownContainer"] h6,
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+    [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
+    .stApp h1, .stApp h2, .stApp h3,
+    .stApp h4, .stApp h5, .stApp h6 {{
         color: {h_color} !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }}
-    h1 {{
-        font-size: 2.3rem !important;
+
+    /* WYRAŹNE, POWIĘKSZONE ROZMIARY NAGŁÓWKÓW (H1, H2, H3) */
+    h1, .stMarkdown h1, [data-testid="stMarkdownContainer"] h1 {{
+        font-size: 2.5rem !important;
         font-weight: 800 !important;
-        margin-bottom: 0.2rem !important;
+        line-height: 1.25 !important;
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.4rem !important;
     }}
-    h2 {{
-        font-size: 1.7rem !important;
+    h2, .stMarkdown h2, [data-testid="stMarkdownContainer"] h2 {{
+        font-size: 1.95rem !important;
         font-weight: 700 !important;
+        line-height: 1.3 !important;
+        margin-top: 0.6rem !important;
+        margin-bottom: 0.4rem !important;
     }}
-    h3 {{
-        font-size: 1.35rem !important;
+    h3, .stMarkdown h3, [data-testid="stMarkdownContainer"] h3 {{
+        font-size: 1.45rem !important;
         font-weight: 700 !important;
+        line-height: 1.35 !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.3rem !important;
     }}
 
     /* Wsparcie dla natywnego motywu ciemnego wybranego w Streamlit */
@@ -594,7 +608,7 @@ current_stage = 2 if (is_stage_1_complete and is_drawn) else 1
 
 c_title, c_theme = st.columns([4, 1])
 with c_title:
-    st.markdown("<h1>🎅 Losowanie prezentów u Zalewskich 2026</h1>", unsafe_allow_html=True)
+    st.markdown("# 🎅 Losowanie prezentów u Zalewskich 2026")
 with c_theme:
     is_dark = st.session_state.get("app_theme", "light") == "dark"
     btn_label = "☀️ Tryb jasny" if is_dark else "🌙 Tryb ciemny"
@@ -623,7 +637,7 @@ USER_SELECTION_OPTIONS = NAMES + [f"👑 {ADMIN_NAME}"]
 # PANEL ADMINISTRATORA (JEŚLI WYBRANO "ADMINISTRATOR")
 # ------------------------------------------------------------------------------
 def render_admin_panel(admin_pin_input: str):
-    st.markdown("<h2>👑 Panel Administratora</h2>", unsafe_allow_html=True)
+    st.markdown("## 👑 Panel Administratora")
     
     if not admin_pin_input:
         st.info("👈 Wpisz kod PIN administratora, aby uzyskać dostęp do panelu zarządczego.")
@@ -736,7 +750,7 @@ def render_admin_panel(admin_pin_input: str):
 # ETAP 1: PODANIE BUDŻETU ORAZ WPISANIE LISTY ŻYCZEŃ (W JEDNYM WIDOKU)
 # ------------------------------------------------------------------------------
 if current_stage == 1:
-    st.markdown("<h2>📝 Krok 1: Podaj swój budżet oraz wpisz listę życzeń</h2>", unsafe_allow_html=True)
+    st.markdown("## 📝 Krok 1: Podaj swój budżet oraz wpisz listę życzeń")
     st.info(f"📊 **Stan zaawansowania: Wypełniło {completed_count} z {TOTAL_MEMBERS} osób.** Każdy uczestnik podaje swoją propozycję kwoty oraz 2-3 pomysły na prezenty dla siebie. Gdy wszyscy uzupełnią formularz, aplikacja automatycznie przeprowadzi losowanie!")
 
     col_user, col_form = st.columns([1, 1])
@@ -764,7 +778,7 @@ if current_stage == 1:
         render_admin_panel(user_pin)
     else:
         with col_form:
-            st.markdown("### 💰 1. Twoja propozycja budżetu (zł):")
+            st.markdown("### 💰 1. Twoja propozycja budżetu (zł) — ile chcesz przeznaczyć na prezent dla wylosowanej osoby")
             
             # Synchronizacja wartości budżetu oraz życzeń po zmianie wybranego uczestnika
             if st.session_state.get("last_selected_person") != selected_account:
@@ -806,7 +820,7 @@ if current_stage == 1:
                 key="budget_number_in"
             )
 
-            st.markdown("### 🎁 2. Twoje 2-3 pomysły na prezent świąteczny:")
+            st.markdown("### 🎁 2. Twoje 2-3 pomysły na prezent świąteczny — co chciałbyś otrzymać")
             if "w1_input" not in st.session_state:
                 st.session_state.w1_input = ""
             if "w2_input" not in st.session_state:
@@ -857,7 +871,7 @@ if current_stage == 1:
 # ETAP 2: LOSOWANIE I TAJNY PODGLĄD WYNIKÓW
 # ------------------------------------------------------------------------------
 elif current_stage == 2:
-    st.markdown("<h2>🎁 Krok 2: Sprawdź swój los (Tajny Podgląd)</h2>", unsafe_allow_html=True)
+    st.markdown("## 🎁 Krok 2: Sprawdź swój los (Tajny Podgląd)")
     st.success(f"🎉 **Wszystkie 12 osób uzupełniło dane!** Losowanie odbyło się z zachowaniem wykluczeń małżonków. Ustalony wspólny budżet: **{st.session_state.official_budget} zł**.")
 
     col_view1, col_view2 = st.columns([1, 1])
