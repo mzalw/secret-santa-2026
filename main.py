@@ -25,7 +25,7 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Wyraziste nagłówki czytelne na białym i czarnym tle */
+    /* Wyraziste nagłówki czytelne na białym tle */
     h1 {
         font-size: 2.3rem !important;
         font-weight: 800 !important;
@@ -41,6 +41,29 @@ st.markdown("""
         font-size: 1.35rem !important;
         font-weight: 700 !important;
         color: var(--text-color, #334155) !important;
+    }
+
+    /* BIAŁE NAGŁÓWKI W WERSJI CIEMNEJ (DARK MODE) */
+    @media (prefers-color-scheme: dark) {
+        h1, h2, h3, h4, h5, h6,
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+        [data-testid="stMarkdownContainer"] h1,
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3 {
+            color: #ffffff !important;
+        }
+    }
+    
+    /* Wsparcie gdy motyw ciemny jest wybrany w Streamlit */
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+    [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+    [data-base-theme="dark"] h1, [data-base-theme="dark"] h2, [data-base-theme="dark"] h3,
+    .stApp[data-theme="dark"] h1, .stApp[data-theme="dark"] h2, .stApp[data-theme="dark"] h3,
+    .stApp[data-base-theme="dark"] h1, .stApp[data-base-theme="dark"] h2, .stApp[data-base-theme="dark"] h3,
+    [data-testid="stAppViewContainer"][data-theme="dark"] h1,
+    [data-testid="stAppViewContainer"][data-theme="dark"] h2,
+    [data-testid="stAppViewContainer"][data-theme="dark"] h3 {
+        color: #ffffff !important;
     }
     
     /* Zapewnienie czytelności tekstów w trybie ciemnym */
@@ -297,6 +320,12 @@ def reset_all_application_data():
     st.session_state.wishes = {}
     st.session_state.assignments = {}
     st.session_state.official_budget = 150
+    st.session_state.budget_number_in = 150
+    st.session_state.w1_input = ""
+    st.session_state.w2_input = ""
+    st.session_state.w3_input = ""
+    if "last_selected_person" in st.session_state:
+        del st.session_state.last_selected_person
     if "budget_finalized" in st.session_state:
         del st.session_state.budget_finalized
     save_data_to_storage(empty_data)
@@ -579,32 +608,63 @@ if current_stage == 1:
     else:
         with col_form:
             st.markdown("### 💰 1. Twoja propozycja budżetu (zł):")
-            current_v = st.session_state.budget_votes.get(selected_account, 150)
             
-            c1, c2, c3, c4 = st.columns(4)
-            for i, val in enumerate([50, 100, 150, 200]):
-                with [c1, c2, c3, c4][i]:
-                    if st.button(f"{val} zł", key=f"quick_amt_{val}", use_container_width=True):
-                        current_v = val
+            # Synchronizacja wartości budżetu oraz życzeń po zmianie wybranego uczestnika
+            if st.session_state.get("last_selected_person") != selected_account:
+                st.session_state.last_selected_person = selected_account
+                st.session_state.budget_number_in = int(st.session_state.budget_votes.get(selected_account, 150))
+                user_w = st.session_state.wishes.get(selected_account, ["", "", ""])
+                while len(user_w) < 3:
+                    user_w.append("")
+                st.session_state.w1_input = user_w[0]
+                st.session_state.w2_input = user_w[1]
+                st.session_state.w3_input = user_w[2]
 
-            budget_val = st.number_input("Lub wpisz dowolną kwotę (zł):", min_value=20, max_value=1000, value=current_v, step=10, key="budget_number_in")
+            if "budget_number_in" not in st.session_state:
+                st.session_state.budget_number_in = int(st.session_state.budget_votes.get(selected_account, 150))
+
+            def set_quick_budget(amount: int):
+                st.session_state.budget_number_in = int(amount)
+
+            c1, c2, c3, c4 = st.columns(4)
+            preset_amounts = [50, 100, 150, 200]
+            for i, val in enumerate(preset_amounts):
+                with [c1, c2, c3, c4][i]:
+                    st.button(
+                        f"{val} zł",
+                        key=f"quick_amt_{val}",
+                        on_click=set_quick_budget,
+                        args=(val,),
+                        use_container_width=True
+                    )
+
+            budget_val = st.number_input(
+                "Lub wpisz dowolną kwotę (zł):",
+                min_value=20,
+                max_value=1000,
+                step=10,
+                key="budget_number_in"
+            )
 
             st.markdown("### 🎁 2. Twoje 2-3 pomysły na prezent świąteczny:")
-            existing_wishes = st.session_state.wishes.get(selected_account, ["", "", ""])
-            while len(existing_wishes) < 3:
-                existing_wishes.append("")
+            if "w1_input" not in st.session_state:
+                st.session_state.w1_input = ""
+            if "w2_input" not in st.session_state:
+                st.session_state.w2_input = ""
+            if "w3_input" not in st.session_state:
+                st.session_state.w3_input = ""
 
-            w1 = st.text_input("Pomysł 1:", value=existing_wishes[0], key="w1_input", placeholder="np. Ciepły wełniany szal lub czapka")
-            w2 = st.text_input("Pomysł 2:", value=existing_wishes[1], key="w2_input", placeholder="np. Dobra kawa ziarnista lub zestaw herbat")
-            w3 = st.text_input("Pomysł 3:", value=existing_wishes[2], key="w3_input", placeholder="np. Książka (kryminał / reportaż)")
+            w1 = st.text_input("Pomysł 1:", key="w1_input", placeholder="np. Ciepły wełniany szal lub czapka")
+            w2 = st.text_input("Pomysł 2:", key="w2_input", placeholder="np. Dobra kawa ziarnista lub zestaw herbat")
+            w3 = st.text_input("Pomysł 3:", key="w3_input", placeholder="np. Książka (kryminał / reportaż)")
 
             if st.button("💾 ZAPISZ MÓJ BUDŻET I LISTĘ ŻYCZEŃ", type="primary", use_container_width=True):
                 if user_pin.strip() == PARTICIPANTS[selected_account]["pin"]:
-                    clean_wishes = [w.strip() for w in [w1, w2, w3] if w.strip()]
+                    clean_wishes = [w.strip() for w in [st.session_state.w1_input, st.session_state.w2_input, st.session_state.w3_input] if w.strip()]
                     if not clean_wishes:
                         st.warning("⚠️ Prosimy o wpisanie chociaż 1 pomysłu na prezent!")
                     else:
-                        st.session_state.budget_votes[selected_account] = int(budget_val)
+                        st.session_state.budget_votes[selected_account] = int(st.session_state.budget_number_in)
                         st.session_state.wishes[selected_account] = clean_wishes
 
                         save_data_to_storage({
