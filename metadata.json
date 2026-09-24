@@ -1,0 +1,8 @@
+{
+  "name": "Świąteczny Secret Santa dla Rodziny",
+  "description": "Prosta i czytelna aplikacja do rodzinnego losowania prezentów świątecznych z wykluczeniem par, tajnym podglądem na PIN, listą życzeń i głosowaniem nad budżetem.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
