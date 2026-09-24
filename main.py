@@ -16,16 +16,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Stylizacja: duża czytelna czcionka, wysoki kontrast, duże przyciski dotykowe
+# Wstrzyknięcie stylów CSS zapewniających powiększoną czcionkę, wysoki kontrast i wygodne przyciski
 st.markdown("""
 <style>
-    /* Globalne powiększenie czcionki dla wygody seniorów */
+    /* Globalne powiększenie czcionki dla wygody seniorów i osób starszych */
     html, body, [class*="css"] {
         font-size: 19px !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Wyraziste nagłówki */
+    /* Wyraziste nagłówki o wysokim kontraście */
     h1 {
         font-size: 2.3rem !important;
         font-weight: 800 !important;
@@ -33,7 +33,7 @@ st.markdown("""
         margin-bottom: 0.2rem !important;
     }
     h2 {
-        font-size: 1.7rem !important;
+        font-size: 1.75rem !important;
         font-weight: 700 !important;
         color: #0f172a !important;
     }
@@ -42,7 +42,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
     
-    /* Duże przyciski dotykowe (min. 56px wysokości) */
+    /* Duże, wyraźne przyciski dotykowe (min. 56px wysokości) */
     .stButton > button {
         min-height: 56px !important;
         font-size: 1.15rem !important;
@@ -53,7 +53,7 @@ st.markdown("""
         border: 2px solid transparent !important;
     }
     
-    /* Główne przyciski w świątecznym kolorze */
+    /* Główne przyciski w świątecznej czerwieni */
     .stButton > button[kind="primary"] {
         background-color: #b91c1c !important;
         color: #ffffff !important;
@@ -64,7 +64,7 @@ st.markdown("""
         transform: translateY(-1px);
     }
     
-    /* Duże pola formularzy */
+    /* Pola formularzy - powiększone i wyraźnie obramowane */
     .stSelectbox, .stTextInput, .stNumberInput {
         font-size: 1.2rem !important;
     }
@@ -73,22 +73,22 @@ st.markdown("""
         padding: 10px 14px !important;
     }
 
-    /* Paski postępu etapów */
-    .step-banner {
+    /* Pasek stanu procesu */
+    .stage-banner {
         background: #ffffff;
         border: 2px solid #e2e8f0;
         border-radius: 16px;
-        padding: 16px 20px;
+        padding: 18px 22px;
         margin-bottom: 24px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.04);
     }
-    .step-badge {
+    .stage-badge {
         display: inline-block;
-        padding: 6px 14px;
+        padding: 7px 16px;
         border-radius: 30px;
-        font-size: 0.95rem;
+        font-size: 1rem;
         font-weight: 800;
-        margin-right: 8px;
+        margin-right: 10px;
     }
     .badge-active {
         background-color: #b91c1c;
@@ -103,26 +103,35 @@ st.markdown("""
         color: #475569;
     }
     
-    /* Karta z wylosowaną osobą */
+    /* Karta wylosowanej osoby w Etapie 2 */
     .gift-box {
         background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
         color: #ffffff;
-        padding: 30px;
+        padding: 32px;
         border-radius: 20px;
         text-align: center;
-        box-shadow: 0 10px 25px -5px rgba(185, 28, 28, 0.4);
+        box-shadow: 0 12px 28px -5px rgba(185, 28, 28, 0.45);
         margin: 20px 0;
     }
     .gift-box h1 {
         color: #ffffff !important;
-        font-size: 2.8rem !important;
-        margin: 10px 0 !important;
+        font-size: 2.9rem !important;
+        margin: 12px 0 !important;
+    }
+
+    /* Karta informacyjna */
+    .info-card {
+        background-color: #f8fafc;
+        border: 2px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. DEFINICJA 6 STAŁYCH PAR RODZINNYCH (12 OSÓB)
+# 2. BAZA 6 STAŁYCH PAR RODZINNYCH (12 OSÓB)
 # ==============================================================================
 PARTICIPANTS = {
     # Para 1
@@ -151,14 +160,14 @@ PARTICIPANTS = {
 }
 
 NAMES = list(PARTICIPANTS.keys())
-TOTAL_MEMBERS = len(NAMES) # 12 osób
+TOTAL_MEMBERS = len(NAMES) # Dokładnie 12 osób
 LOCAL_DB_FILE = "secret_santa_db.json"
 
 # ==============================================================================
-# 3. WARSTWA DANYCH (GOOGLE SHEETS LUB ZAPIS PLIKOWY JSON W CHMURZE)
+# 3. WARSTWA DANYCH (GOOGLE SHEETS LUB CHMURA / LOCAL JSON FALLBACK)
 # ==============================================================================
 def get_sheets_connection():
-    """Inicjalizuje połączenie z Google Sheets jeśli skonfigurowane w secrets"""
+    """Próbuje zainicjalizować połączenie z Google Sheets zdefiniowane w st.secrets"""
     try:
         from streamlit_gsheets import GSheetsConnection
         conn = st.connection("gsheets", type=GSheetsConnection)
@@ -167,7 +176,7 @@ def get_sheets_connection():
         return None
 
 def load_data_from_storage() -> dict:
-    """Wczytuje aktualny stan z Google Sheets lub lokalnego pliku JSON"""
+    """Wczytuje aktualny stan z Google Sheets lub trwałego pliku JSON"""
     conn = get_sheets_connection()
     if conn:
         try:
@@ -196,8 +205,7 @@ def load_data_from_storage() -> dict:
                         r = row.get("receiver")
                         if pd.notna(r) and str(r).strip() in NAMES:
                             assignments[name] = str(r).strip()
-                            
-                    # Odczyt zapisanego oficjalnego budżetu jeśli obecny
+
                     ob = row.get("official_budget")
                     if pd.notna(ob) and str(ob).strip() != "":
                         try:
@@ -214,7 +222,7 @@ def load_data_from_storage() -> dict:
         except Exception:
             pass
 
-    # Fallback: odczyt z trwałego pliku JSON
+    # Fallback lokalny
     if os.path.exists(LOCAL_DB_FILE):
         try:
             with open(LOCAL_DB_FILE, "r", encoding="utf-8") as f:
@@ -230,15 +238,13 @@ def load_data_from_storage() -> dict:
     }
 
 def save_data_to_storage(data: dict):
-    """Zapisuje dane do Google Sheets oraz do pliku JSON"""
-    # 1. Zapis lokalny/chmurowy JSON
+    """Zapisuje kompletny stan do pliku JSON oraz synchronizuje z Google Sheets"""
     try:
         with open(LOCAL_DB_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
-    # 2. Zapis do Google Sheets jeśli dostępne
     conn = get_sheets_connection()
     if conn:
         try:
@@ -257,7 +263,7 @@ def save_data_to_storage(data: dict):
         except Exception:
             pass
 
-# Inicjalizacja session_state
+# Inicjalizacja stanu w sesji
 persisted_data = load_data_from_storage()
 if "budget_votes" not in st.session_state:
     st.session_state.budget_votes = persisted_data.get("budget_votes", {})
@@ -269,10 +275,16 @@ if "official_budget" not in st.session_state:
     st.session_state.official_budget = persisted_data.get("official_budget", 150)
 
 # ==============================================================================
-# 4. ALGORYTM LOSOWANIA Z WYKLUCZENIAMI (BEZWZGLĘDNA BIJEKCJA I BRAK MAŁŻONKA)
+# 4. MATEMATYCZNY ALGORYTM LOSOWANIA Z WYKLUCZENIAMI (BEZWZGLĘDNA BIJEKCJA)
 # ==============================================================================
 def run_secret_santa_draw(names: List[str]) -> Optional[Dict[str, str]]:
-    """Gwarantuje, że nikt nie wylosuje siebie ani partnera z pary."""
+    """
+    Losuje pary Secret Santa spełniając bezwzględne reguły:
+    1. giver != receiver (brak losowania samego siebie)
+    2. giver.partner != receiver (brak małżonka/partnera z pary)
+    3. Każdy daje dokładnie 1 prezent i dostaje dokładnie 1 prezent
+    4. Brak 2-osobowych cykli wzajemnych (A->B i B->A) jeśli istnieje rozwiązanie
+    """
     givers = list(names)
     random.shuffle(givers)
     assignments = {}
@@ -306,7 +318,7 @@ def run_secret_santa_draw(names: List[str]) -> Optional[Dict[str, str]]:
     if solve(0):
         return assignments
 
-    # Relaxed fallback (bez 2-pętli)
+    # Fallback (gdyby 2-pętla była konieczna)
     assignments.clear()
     used_receivers.clear()
 
@@ -329,29 +341,27 @@ def run_secret_santa_draw(names: List[str]) -> Optional[Dict[str, str]]:
     return assignments if solve_relaxed(0) else None
 
 # ==============================================================================
-# 5. OBLICZANIE AKTUALNEGO ETAPU PROCESU
+# 5. OBLICZANIE STATUSU DWUETAPOWEGO PROCESU
 # ==============================================================================
-# Liczba oddanych głosów na budżet
-voted_count = len([name for name in NAMES if name in st.session_state.budget_votes])
-is_stage_1_done = voted_count >= TOTAL_MEMBERS
+# Osoba ukończyła Etap 1, jeśli podała kwotę budżetu ORAZ wpisała min. 1 życzenie
+completed_members = [
+    name for name in NAMES
+    if (name in st.session_state.budget_votes) and (len(st.session_state.wishes.get(name, [])) > 0)
+]
+completed_count = len(completed_members)
+is_stage_1_complete = completed_count >= TOTAL_MEMBERS
 
-# Liczba wpisanych list życzeń (co najmniej 1 życzenie wpisane)
-wishes_count = len([name for name in NAMES if len(st.session_state.wishes.get(name, [])) > 0])
-is_stage_2_done = is_stage_1_done and (wishes_count >= TOTAL_MEMBERS)
-
-# Czy losowanie zostało przeprowadzone
+# Czy losowanie zostało już przeprowadzone i zapisane
 is_drawn = len(st.session_state.assignments) == TOTAL_MEMBERS
 
-# Wyliczenie średniego budżetu
+# Wyliczenie średniego budżetu ze wszystkich zebranych głosów
 all_votes = list(st.session_state.budget_votes.values())
-calculated_avg_budget = int(round(sum(all_votes) / len(all_votes))) if all_votes else 150
+avg_budget = int(round(sum(all_votes) / len(all_votes))) if all_votes else 150
 
-# Automatyczne ustawienie oficjalnego budżetu i wykonanie losowania po Etapie 2
-if is_stage_1_done and "budget_finalized" not in st.session_state:
-    st.session_state.official_budget = calculated_avg_budget
-    st.session_state.budget_finalized = True
-
-if is_stage_2_done and not is_drawn:
+# Automatyczne przejście do Etapu 2:
+# Gdy wszystkie 12 osób uzupełni dane, aplikacja zatwierdza średni budżet i losuje pary!
+if is_stage_1_complete and not is_drawn:
+    st.session_state.official_budget = avg_budget
     drawn_pairs = run_secret_santa_draw(NAMES)
     if drawn_pairs:
         st.session_state.assignments = drawn_pairs
@@ -363,170 +373,126 @@ if is_stage_2_done and not is_drawn:
             "official_budget": st.session_state.official_budget
         })
 
-# Wyznaczenie numeru aktywnego etapu (1, 2 lub 3)
-if not is_stage_1_done:
-    current_stage = 1
-elif not is_stage_2_done:
-    current_stage = 2
-else:
-    current_stage = 3
+current_stage = 2 if (is_stage_1_complete and is_drawn) else 1
 
 # ==============================================================================
 # 6. GŁÓWNY INTERFEJS STREAMLIT DLA RODZINY
 # ==============================================================================
 
 st.markdown("<h1>🎅 Świąteczny Secret Santa dla Rodziny</h1>", unsafe_allow_html=True)
-st.write("Aplikacja prowadzi całą rodzinę krok po kroku przez 3 etapy. Kolejny etap odblokowuje się, gdy wszyscy ukończą bieżący!")
 
-# Pasek postępu 3 etapów
-badge_1 = "badge-done" if is_stage_1_done else ("badge-active" if current_stage == 1 else "badge-locked")
-badge_2 = "badge-done" if is_stage_2_done else ("badge-active" if current_stage == 2 else "badge-locked")
-badge_3 = "badge-done" if is_drawn else ("badge-active" if current_stage == 3 else "badge-locked")
+# Pasek stanu 2 etapów
+b1_class = "badge-done" if current_stage == 2 else "badge-active"
+b2_class = "badge-done" if (current_stage == 2 and is_drawn) else "badge-locked"
 
 st.markdown(f"""
-<div class="step-banner">
+<div class="stage-banner">
     <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-        <span class="step-badge {badge_1}">Etap 1: Budżet ({voted_count}/{TOTAL_MEMBERS})</span>
-        <span style="color:#94a3b8; font-weight:bold;">&rarr;</span>
-        <span class="step-badge {badge_2}">Etap 2: Listy życzeń ({wishes_count}/{TOTAL_MEMBERS})</span>
-        <span style="color:#94a3b8; font-weight:bold;">&rarr;</span>
-        <span class="step-badge {badge_3}">Etap 3: Losowanie i Tajny Podgląd</span>
+        <span class="stage-badge {b1_class}">Krok 1: Budżet i Lista Życzeń ({completed_count}/{TOTAL_MEMBERS} osób)</span>
+        <span style="color:#94a3b8; font-weight:bold; font-size:1.3rem;">&rarr;</span>
+        <span class="stage-badge {b2_class}">Krok 2: Losowanie i Tajny Podgląd</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# ETAP 1: ZBIERANIE BUDŻETÓW (ODBLOKOWANE GDY voted_count < 12)
+# ETAP 1: PODANIE BUDŻETU ORAZ WPISANIE LISTY ŻYCZEŃ (W JEDNYM WIDOKU)
 # ------------------------------------------------------------------------------
 if current_stage == 1:
-    st.markdown("<h2>💰 Etap 1: Zbieranie propozycji budżetu na prezent</h2>", unsafe_allow_html=True)
-    st.info(f"📊 **Postęp: Wypełniło {voted_count} z {TOTAL_MEMBERS} osób.** Gdy wszyscy wpiszą kwotę, system automatycznie wyliczy wspólną średnią i przejdzie do zbierania list życzeń!")
+    st.markdown("<h2>📝 Krok 1: Podaj swój budżet oraz wpisz listę życzeń</h2>", unsafe_allow_html=True)
+    st.info(f"📊 **Stan zaawansowania: Wypełniło {completed_count} z {TOTAL_MEMBERS} osób.** Każdy uczestnik podaje swoją propozycję kwoty oraz 2-3 pomysły na prezenty dla siebie. Gdy wszyscy uzupełnią formularz, aplikacja automatycznie przeprowadzi losowanie!")
 
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.markdown("### 👤 Kto teraz głosuje?")
-        voter = st.selectbox("Wybierz swoje imię:", options=NAMES, key="s1_user")
-        voter_pin = st.text_input("Wpisz swój 4-cyfrowy kod PIN:", type="password", max_chars=6, key="s1_pin", placeholder="np. 1001")
-        with st.expander("💡 Zapomniałeś PIN? Sprawdź tutaj"):
-            st.write(f"Domyślny PIN dla **{voter}**: `{PARTICIPANTS[voter]['pin']}`")
+    # Formularz logowania i zapisu danych
+    col_user, col_form = st.columns([1, 1])
 
-    with col2:
-        st.markdown("### 💵 Twoja propozycja kwoty:")
-        current_val = st.session_state.budget_votes.get(voter, 150)
+    with col_user:
+        st.markdown("### 👤 Kto teraz uzupełnia?")
+        selected_person = st.selectbox("Wybierz swoje imię z listy:", options=NAMES, key="s1_person_select")
+        user_pin = st.text_input("Wpisz swój 4-cyfrowy kod PIN:", type="password", max_chars=6, key="s1_pin_input", placeholder="np. 1001")
         
-        # Szybkie kafelki kwot
-        preset_cols = st.columns(4)
-        for i, amt in enumerate([50, 100, 150, 200]):
-            with preset_cols[i]:
-                if st.button(f"{amt} zł", use_container_width=True, key=f"btn_amt_{amt}"):
-                    current_val = amt
+        with st.expander("💡 Zapomniałeś PIN-u? Kliknij tutaj"):
+            st.info(f"Domyślny kod PIN dla osoby **{selected_person}** to: **{PARTICIPANTS[selected_person]['pin']}**")
 
-        selected_amount = st.number_input("Lub wpisz dowolną kwotę (zł):", min_value=20, max_value=1000, value=current_val, step=10, key="s1_amount")
+        st.markdown("""
+        <div class="info-card">
+            <strong>Wskazówki dla seniorów:</strong><br>
+            Wpisz kwotę, jaką uważasz za odpowiednią, oraz 2-3 pomysły (np. ciepły szalik, dobra herbata, książka). Osoba, która Cię wylosuje, zobaczy Twoje podpowiedzi!
+        </div>
+        """, unsafe_allow_html=True)
 
-        if st.button("💾 ZAPISZ MÓJ GŁOS", type="primary", use_container_width=True):
-            if voter_pin.strip() == PARTICIPANTS[voter]["pin"]:
-                st.session_state.budget_votes[voter] = int(selected_amount)
-                save_data_to_storage({
-                    "budget_votes": st.session_state.budget_votes,
-                    "wishes": st.session_state.wishes,
-                    "assignments": st.session_state.assignments,
-                    "official_budget": st.session_state.official_budget
-                })
-                st.success(f"Dziękujemy, {voter}! Twój głos ({selected_amount} zł) został pomyślnie zapisany w chmurze.")
-                st.rerun()
-            else:
-                st.error("❌ Błędny kod PIN! Sprawdź podpowiedź pod polem PIN.")
+    with col_form:
+        st.markdown("### 💰 1. Twoja propozycja budżetu (zł):")
+        current_v = st.session_state.budget_votes.get(selected_person, 150)
+        
+        # Szybkie kafelki gotowych kwot dla wygody
+        c1, c2, c3, c4 = st.columns(4)
+        for i, val in enumerate([50, 100, 150, 200]):
+            with [c1, c2, c3, c4][i]:
+                if st.button(f"{val} zł", key=f"quick_amt_{val}", use_container_width=True):
+                    current_v = val
 
-    # Lista obecnego stanu głosowania (kto oddał głos)
-    st.markdown("---")
-    st.markdown("### 📋 Kto już oddał głos:")
-    cols_status = st.columns(4)
-    for idx, name in enumerate(NAMES):
-        has_voted = name in st.session_state.budget_votes
-        with cols_status[idx % 4]:
-            if has_voted:
-                st.success(f"✅ {name}")
-            else:
-                st.warning(f"⏳ {name}")
+        budget_val = st.number_input("Lub wpisz dowolną kwotę (zł):", min_value=20, max_value=1000, value=current_v, step=10, key="budget_number_in")
 
-    # Panel awaryjnego przejścia dla organizatora (gdyby ktoś nie mógł zagłosować)
-    with st.expander("⚙️ Opcja dla organizatora (przejdź dalej z obecną średnią)"):
-        st.write(f"Obecna średnia z oddanych głosów: **{calculated_avg_budget} zł**")
-        if st.button("Zatwierdź obecną kwotę i odblokuj Etap 2 natychmiast"):
-            for n in NAMES:
-                if n not in st.session_state.budget_votes:
-                    st.session_state.budget_votes[n] = calculated_avg_budget
-            st.session_state.official_budget = calculated_avg_budget
-            save_data_to_storage({
-                "budget_votes": st.session_state.budget_votes,
-                "wishes": st.session_state.wishes,
-                "assignments": st.session_state.assignments,
-                "official_budget": st.session_state.official_budget
-            })
-            st.rerun()
+        st.markdown("### 🎁 2. Twoje 2-3 pomysły na prezent świąteczny:")
+        existing_wishes = st.session_state.wishes.get(selected_person, ["", "", ""])
+        while len(existing_wishes) < 3:
+            existing_wishes.append("")
 
-# ------------------------------------------------------------------------------
-# ETAP 2: ZBIERANIE LIST ŻYCZEŃ (ODBLOKOWANE GDY ETAP 1 ZAKOŃCZONY)
-# ------------------------------------------------------------------------------
-elif current_stage == 2:
-    st.markdown("<h2>📝 Etap 2: Zbieranie list życzeń na prezent</h2>", unsafe_allow_html=True)
-    st.success(f"🎉 **Etap 1 zakończony!** Ustalony wspólny budżet rodziny: **{st.session_state.official_budget} zł**.")
-    st.info(f"📊 **Postęp życzeń: Wypełniło {wishes_count} z {TOTAL_MEMBERS} osób.** Wpisz 2-3 pomysły na to, co chciałbyś/chciałabyś dostać pod choinkę!")
+        w1 = st.text_input("Pomysł 1:", value=existing_wishes[0], key="w1_input", placeholder="np. Ciepły wełniany szal lub czapka")
+        w2 = st.text_input("Pomysł 2:", value=existing_wishes[1], key="w2_input", placeholder="np. Dobra kawa ziarnista lub zestaw herbat")
+        w3 = st.text_input("Pomysł 3:", value=existing_wishes[2], key="w3_input", placeholder="np. Książka (kryminał / reportaż)")
 
-    col_w1, col_w2 = st.columns([1, 1])
-    with col_w1:
-        st.markdown("### 👤 Wybierz swoje imię:")
-        w_person = st.selectbox("Dla kogo wpisujesz życzenia?", options=NAMES, key="s2_user")
-        w_pin = st.text_input("Wpisz swój kod PIN:", type="password", max_chars=6, key="s2_pin")
-        with st.expander("💡 Zapomniałeś PIN?"):
-            st.write(f"Domyślny PIN dla **{w_person}**: `{PARTICIPANTS[w_person]['pin']}`")
-
-    with col_w2:
-        st.markdown("### 🎁 Twoje pomysły na prezent świąteczny:")
-        current_wishes = st.session_state.wishes.get(w_person, ["", "", ""])
-        while len(current_wishes) < 3:
-            current_wishes.append("")
-
-        p1 = st.text_input("1. Pierwszy pomysł:", value=current_wishes[0], key="s2_p1", placeholder="np. Ciepły wełniany szal")
-        p2 = st.text_input("2. Drugi pomysł:", value=current_wishes[1], key="s2_p2", placeholder="np. Dobra kawa ziarnista lub herbata")
-        p3 = st.text_input("3. Trzeci pomysł:", value=current_wishes[2], key="s2_p3", placeholder="np. Książka kryminalna")
-
-        if st.button("💾 ZAPISZ MOJĄ LISTĘ ŻYCZEŃ", type="primary", use_container_width=True):
-            if w_pin.strip() == PARTICIPANTS[w_person]["pin"]:
-                clean = [p.strip() for p in [p1, p2, p3] if p.strip()]
-                if not clean:
-                    st.warning("Wpisz przynajmniej jeden pomysł na prezent!")
+        if st.button("💾 ZAPISZ MÓJ BUDŻET I LISTĘ ŻYCZEŃ", type="primary", use_container_width=True):
+            if user_pin.strip() == PARTICIPANTS[selected_person]["pin"]:
+                clean_wishes = [w.strip() for w in [w1, w2, w3] if w.strip()]
+                if not clean_wishes:
+                    st.warning("⚠️ Prosimy o wpisanie chociaż 1 pomysłu na prezent!")
                 else:
-                    st.session_state.wishes[w_person] = clean
+                    # Zapisanie budżetu i życzeń
+                    st.session_state.budget_votes[selected_person] = int(budget_val)
+                    st.session_state.wishes[selected_person] = clean_wishes
+
                     save_data_to_storage({
                         "budget_votes": st.session_state.budget_votes,
                         "wishes": st.session_state.wishes,
                         "assignments": st.session_state.assignments,
                         "official_budget": st.session_state.official_budget
                     })
-                    st.success(f"Brawo, {w_person}! Twoja lista życzeń została zapisana.")
+                    st.success(f"🎉 Sukces! Dane dla osoby {selected_person} zostały zapisane!")
                     st.rerun()
             else:
-                st.error("❌ Błędny kod PIN!")
+                st.error("❌ Błędny kod PIN! Sprawdź podpowiedź pod polem z PIN-em.")
 
-    # Status uzupełnienia list
+    # Tabela postępu - kto już uzupełnił dane
     st.markdown("---")
-    st.markdown("### 📋 Kto już uzupełnił listę życzeń:")
-    cols_wishes_stat = st.columns(4)
+    st.markdown("### 📋 Stan uzupełnienia formularza w rodzinie:")
+    status_cols = st.columns(4)
     for idx, name in enumerate(NAMES):
+        has_b = name in st.session_state.budget_votes
         has_w = len(st.session_state.wishes.get(name, [])) > 0
-        with cols_wishes_stat[idx % 4]:
-            if has_w:
-                st.success(f"✅ {name}")
-            else:
-                st.warning(f"⏳ {name}")
+        is_ready = has_b and has_w
 
-    # Awaryjne odblokowanie Etapu 3 dla organizatora
-    with st.expander("⚙️ Opcja dla organizatora (przejdź do losowania od razu)"):
-        if st.button("Przeprowadź losowanie i odblokuj Etap 3 teraz"):
-            drawn_pairs = run_secret_santa_draw(NAMES)
-            if drawn_pairs:
-                st.session_state.assignments = drawn_pairs
+        with status_cols[idx % 4]:
+            if is_ready:
+                st.success(f"✅ **{name}** (Gotowe)")
+            else:
+                st.warning(f"⏳ **{name}** (Czeka)")
+
+    # Opcja dla organizatora / administratora
+    with st.expander("⚙️ Opcje organizatora (awaryjne przejście do losowania)"):
+        st.write(f"Bieżąca średnia z podanych kwot: **{avg_budget} zł**")
+        st.write(f"Liczba osób, które uzupełniły: **{completed_count} z {TOTAL_MEMBERS}**")
+        if st.button("Zatwierdź bieżący stan i przeprowadź losowanie teraz"):
+            st.session_state.official_budget = avg_budget
+            # Uzupełnienie brakujących domyślnymi kwotami
+            for n in NAMES:
+                if n not in st.session_state.budget_votes:
+                    st.session_state.budget_votes[n] = avg_budget
+                if len(st.session_state.wishes.get(n, [])) == 0:
+                    st.session_state.wishes[n] = ["Niespodzianka świąteczna!"]
+            drawn = run_secret_santa_draw(NAMES)
+            if drawn:
+                st.session_state.assignments = drawn
                 save_data_to_storage({
                     "budget_votes": st.session_state.budget_votes,
                     "wishes": st.session_state.wishes,
@@ -536,98 +502,100 @@ elif current_stage == 2:
                 st.rerun()
 
 # ------------------------------------------------------------------------------
-# ETAP 3: LOSOWANIE I TAJNY PODGLĄD WYNIKÓW (ODBLOKOWANE GDY WSZYSTKO GOTOWE)
+# ETAP 2: LOSOWANIE I TAJNY PODGLĄD WYNIKÓW
 # ------------------------------------------------------------------------------
-elif current_stage == 3:
-    st.markdown("<h2>🎁 Etap 3: Tajny podgląd wylosowanej osoby</h2>", unsafe_allow_html=True)
-    st.success("🎉 **Wszystkie etapy zakończone!** Losowanie odbyło się z bezwzględnym wykluczeniem małżonków i samego siebie.")
+elif current_stage == 2:
+    st.markdown("<h2>🎁 Krok 2: Sprawdź swój los (Tajny Podgląd)</h2>", unsafe_allow_html=True)
+    st.success(f"🎉 **Wszystkie 12 osób uzupełniło dane!** Losowanie odbyło się z zachowaniem wykluczeń małżonków. Ustalony wspólny budżet: **{st.session_state.official_budget} zł**.")
 
-    col_look1, col_look2 = st.columns([1, 1])
-    with col_look1:
-        st.markdown("### 👤 Kto chce sprawdzić swój los?")
-        look_user = st.selectbox("Wybierz swoje imię:", options=NAMES, key="s3_user")
-        look_pin = st.text_input("Wpisz swój kod PIN:", type="password", max_chars=6, key="s3_pin", placeholder="Wpisz 4 cyfry")
-        with st.expander("💡 Potrzebujesz pomocy z PIN-em?"):
-            st.write(f"Domyślny PIN dla **{look_user}**: `{PARTICIPANTS[look_user]['pin']}`")
+    col_view1, col_view2 = st.columns([1, 1])
 
-    with col_look2:
-        st.markdown("### 🔒 Weryfikacja i podgląd:")
-        if not look_pin:
-            st.info("👈 Wpisz swój kod PIN po lewej stronie, aby bezpiecznie podejrzeć wylosowaną osobę.")
-        elif look_pin.strip() != PARTICIPANTS[look_user]["pin"]:
-            st.error("❌ Błędny kod PIN. Spróbuj ponownie lub użyj podpowiedzi.")
+    with col_view1:
+        st.markdown("### 👤 Kto chce sprawdzić swój wynik?")
+        reveal_user = st.selectbox("Wybierz swoje imię:", options=NAMES, key="s2_reveal_user")
+        reveal_pin = st.text_input("Wpisz swój 4-cyfrowy kod PIN:", type="password", max_chars=6, key="s2_reveal_pin", placeholder="np. 1001")
+        
+        with st.expander("💡 Przypomnij mój kod PIN"):
+            st.info(f"Domyślny PIN dla **{reveal_user}**: `{PARTICIPANTS[reveal_user]['pin']}`")
+
+    with col_view2:
+        st.markdown("### 🔒 Weryfikacja tożsamości:")
+        if not reveal_pin:
+            st.info("👈 Wpisz swój kod PIN po lewej stronie, aby bezpiecznie odsłonić wylosowaną osobę.")
+        elif reveal_pin.strip() != PARTICIPANTS[reveal_user]["pin"]:
+            st.error("❌ Błędny kod PIN! Spróbuj ponownie lub skorzystaj z przypomnienia.")
         else:
-            receiver = st.session_state.assignments.get(look_user)
+            receiver = st.session_state.assignments.get(reveal_user)
             if receiver:
-                st.success("✅ Tożsamość potwierdzona! Oto Twój wynik:")
-                
-                # Wielka świąteczna karta z wynikiem
+                st.success("✅ Kod PIN poprawny! Oto Twój wynik:")
+
+                # Piękna, wyraźna karta świąteczna
                 st.markdown(f"""
                 <div class="gift-box">
-                    <div style="font-size: 1.15rem; text-transform: uppercase; letter-spacing: 2px;">Kupujesz prezent dla:</div>
+                    <div style="font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">W tym roku robisz prezent dla:</div>
                     <h1>🎁 {receiver} 🎁</h1>
-                    <div style="font-size: 1.1rem; opacity: 0.9;">
-                        ({PARTICIPANTS[receiver]['pair']} · Partner: {PARTICIPANTS[receiver]['partner']})
+                    <div style="font-size: 1.15rem; opacity: 0.95;">
+                        ({PARTICIPANTS[receiver]['pair']} · Małżonek/Partner: {PARTICIPANTS[receiver]['partner']})
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-                st.markdown(f"### 💰 Obowiązujący budżet: **{st.session_state.official_budget} zł**")
+                st.markdown(f"### 💰 Ustalony wspólny limit budżetu: **{st.session_state.official_budget} zł**")
 
                 # Lista życzeń wylosowanej osoby
-                r_wishes = st.session_state.wishes.get(receiver, [])
+                receiver_wishes = st.session_state.wishes.get(receiver, [])
                 st.markdown(f"### 📝 Pomysły na prezent od {receiver}:")
-                if r_wishes:
-                    for i, w in enumerate(r_wishes, 1):
+                if receiver_wishes:
+                    for i, w in enumerate(receiver_wishes, 1):
                         st.markdown(f"**{i}.** {w}")
                 else:
                     st.info(f"{receiver} nie wpisał(a) jeszcze konkretnych życzeń.")
 
                 # Przygotowanie wiadomości na WhatsApp i SMS
-                w_text = "\\n".join([f"{i+1}. {w}" for i, w in enumerate(r_wishes)])
-                sms_body = (
-                    f"🎁 Cześć {look_user}! W rodzinnym Secret Santa wylosowałeś(aś): {receiver}! "
+                wishes_formatted = "\\n".join([f"{i+1}. {w}" for i, w in enumerate(receiver_wishes)])
+                sms_text = (
+                    f"🎁 Cześć {reveal_user}! W rodzinnym Secret Santa wylosowałeś(aś): {receiver}! "
                     f"Budżet: {st.session_state.official_budget} zł. "
-                    f"Pomysły na prezent: {w_text}. Wesołych Świąt!"
+                    f"Pomysły na prezent: {wishes_formatted}. Wesołych Świąt!"
                 )
-                wa_url = f"https://wa.me/?text={urllib.parse.quote(sms_body)}"
-                sms_url = f"sms:?&body={urllib.parse.quote(sms_body)}"
+                wa_link = f"https://wa.me/?text={urllib.parse.quote(sms_text)}"
+                sms_link = f"sms:?&body={urllib.parse.quote(sms_text)}"
 
                 st.markdown("---")
                 st.markdown("#### Zapisz sobie na telefonie:")
-                c_wa, c_sms = st.columns(2)
-                with c_wa:
-                    st.link_button("💬 Otwórz w WhatsApp", wa_url, use_container_width=True)
-                with c_sms:
-                    st.link_button("📱 Wyślij jako SMS", sms_url, use_container_width=True)
+                btn_wa, btn_sms = st.columns(2)
+                with btn_wa:
+                    st.link_button("💬 Otwórz w WhatsApp", wa_link, use_container_width=True)
+                with btn_sms:
+                    st.link_button("📱 Wyślij jako SMS", sms_link, use_container_width=True)
 
                 st.markdown("---")
-                st.info("🔒 **Ważne dla dyskrecji:** Po zapoznaniu się z wynikiem skasuj wpisany PIN z pola po lewej stronie, aby kolejna osoba nie podejrzała Twojego losu!")
+                st.warning("🔒 **Ważne dla dyskrecji:** Po sprawdzeniu wyniku skasuj wpisany PIN z pola po lewej stronie, aby kolejna osoba podchodząca do telefonu nie zobaczyła Twojego losu!")
 
-    # Panel Administratora
+    # Panel organizatora
     st.markdown("---")
-    with st.expander("📋 Panel Organizatora (Wszystkie pary - dla administratora)"):
-        st.warning("Uwaga: Ta tabela zawiera pełną listę wszystkich 12 wylosowanych par!")
-        show_admin = st.checkbox("Wyświetl pełną tabelę organizatora", value=False)
-        if show_admin:
+    with st.expander("📋 Panel Organizatora (Podgląd wszystkich par i eksport)"):
+        st.warning("⚠️ Ta tabela zawiera pełną listę wszystkich 12 wylosowanych par. Oglądaj tylko jako administrator!")
+        show_admin_tbl = st.checkbox("Pokaż pełną tabelę wyników", value=False)
+        if show_admin_tbl:
             rows = []
             for giver in NAMES:
                 rec = st.session_state.assignments.get(giver, "—")
                 rec_w = ", ".join(st.session_state.wishes.get(rec, []))
                 rows.append({
-                    "Dający": giver,
+                    "Dający prezent": giver,
                     "Para": PARTICIPANTS[giver]["pair"],
                     "PIN": PARTICIPANTS[giver]["pin"],
-                    "Wylosowany": rec,
-                    "Lista życzeń": rec_w,
+                    "Wylosowany obdarowywany": rec,
+                    "Życzenia obdarowywanego": rec_w,
                 })
-            df_admin = pd.DataFrame(rows)
-            st.dataframe(df_admin, use_container_width=True)
-            
-            csv_export = df_admin.to_csv(index=False).encode('utf-8')
+            df_res = pd.DataFrame(rows)
+            st.dataframe(df_res, use_container_width=True)
+
+            csv_data = df_res.to_csv(index=False).encode('utf-8')
             st.download_button(
-                "📥 Pobierz kopię tabeli (CSV)",
-                data=csv_export,
-                file_name="secret_santa_wszystkie_pary.csv",
+                "📥 Pobierz wyniki jako CSV / Excel",
+                data=csv_data,
+                file_name="secret_santa_wyniki_rodzina.csv",
                 mime="text/csv"
             )
