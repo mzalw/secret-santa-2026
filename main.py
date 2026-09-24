@@ -25,25 +25,30 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Wyraziste nagłówki czytelne na białym tle */
+    /* DOMYŚLNIE I W WERSJI JASNEJ: NAGŁÓWKI SĄ CZARNE */
+    h1, h2, h3, h4, h5, h6,
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+    [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3 {
+        color: #000000 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
     h1 {
         font-size: 2.3rem !important;
         font-weight: 800 !important;
-        color: #ef4444 !important;
         margin-bottom: 0.2rem !important;
     }
     h2 {
         font-size: 1.7rem !important;
         font-weight: 700 !important;
-        color: var(--text-color, #1e293b) !important;
     }
     h3 {
         font-size: 1.35rem !important;
         font-weight: 700 !important;
-        color: var(--text-color, #334155) !important;
     }
 
-    /* BIAŁE NAGŁÓWKI W WERSJI CIEMNEJ (DARK MODE) */
+    /* W WERSJI CIEMNEJ (DARK MODE): NAGŁÓWKI MUSZĄ BYĆ BIAŁE */
     @media (prefers-color-scheme: dark) {
         h1, h2, h3, h4, h5, h6,
         .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
@@ -54,7 +59,7 @@ st.markdown("""
         }
     }
     
-    /* Wsparcie gdy motyw ciemny jest wybrany w Streamlit */
+    /* Wsparcie dla motywu ciemnego wybranego w ustawieniach Streamlit */
     [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
     [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
     [data-base-theme="dark"] h1, [data-base-theme="dark"] h2, [data-base-theme="dark"] h3,
@@ -64,6 +69,18 @@ st.markdown("""
     [data-testid="stAppViewContainer"][data-theme="dark"] h2,
     [data-testid="stAppViewContainer"][data-theme="dark"] h3 {
         color: #ffffff !important;
+    }
+
+    /* Gdy w Streamlit jawnie ustawiony jest motyw jasny */
+    [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
+    [data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6,
+    [data-base-theme="light"] h1, [data-base-theme="light"] h2, [data-base-theme="light"] h3,
+    .stApp[data-theme="light"] h1, .stApp[data-theme="light"] h2, .stApp[data-theme="light"] h3,
+    .stApp[data-base-theme="light"] h1, .stApp[data-base-theme="light"] h2, .stApp[data-base-theme="light"] h3,
+    [data-testid="stAppViewContainer"][data-theme="light"] h1,
+    [data-testid="stAppViewContainer"][data-theme="light"] h2,
+    [data-testid="stAppViewContainer"][data-theme="light"] h3 {
+        color: #000000 !important;
     }
     
     /* Zapewnienie czytelności tekstów w trybie ciemnym */
@@ -467,7 +484,7 @@ def render_admin_panel(admin_pin_input: str):
     st.markdown("<h2>👑 Panel Administratora</h2>", unsafe_allow_html=True)
     
     if not admin_pin_input:
-        st.info("👈 Wpisz kod PIN administratora (domyślnie: **9999**), aby uzyskać dostęp do panelu zarządczego.")
+        st.info("👈 Wpisz kod PIN administratora, aby uzyskać dostęp do panelu zarządczego.")
         return
     
     if admin_pin_input.strip() != ADMIN_PIN:
@@ -587,12 +604,10 @@ if current_stage == 1:
         selected_account = st.selectbox("Wybierz swoje imię z listy:", options=USER_SELECTION_OPTIONS, key="s1_person_select")
         
         is_admin_selected = selected_account == f"👑 {ADMIN_NAME}"
-        placeholder_pin = "Wpisz kod PIN administratora (9999)" if is_admin_selected else "np. 1001"
+        placeholder_pin = "Wpisz PIN administratora" if is_admin_selected else "np. 1001"
         user_pin = st.text_input("Wpisz swój 4-cyfrowy kod PIN:", type="password", max_chars=6, key="s1_pin_input", placeholder=placeholder_pin)
         
-        if is_admin_selected:
-            st.info("💡 PIN administratora to: **9999**")
-        else:
+        if not is_admin_selected:
             with st.expander("💡 Zapomniałeś PIN-u? Kliknij tutaj"):
                 st.info(f"Domyślny kod PIN dla osoby **{selected_account}** to: **{PARTICIPANTS[selected_account]['pin']}**")
 
@@ -707,12 +722,10 @@ elif current_stage == 2:
         reveal_account = st.selectbox("Wybierz swoje imię:", options=USER_SELECTION_OPTIONS, key="s2_reveal_user")
         
         is_admin_in_s2 = reveal_account == f"👑 {ADMIN_NAME}"
-        pin_prompt = "Wpisz kod PIN administratora (9999)" if is_admin_in_s2 else "np. 1001"
+        pin_prompt = "Wpisz PIN administratora" if is_admin_in_s2 else "np. 1001"
         reveal_pin = st.text_input("Wpisz swój 4-cyfrowy kod PIN:", type="password", max_chars=6, key="s2_reveal_pin", placeholder=pin_prompt)
         
-        if is_admin_in_s2:
-            st.info("💡 PIN administratora to: **9999**")
-        else:
+        if not is_admin_in_s2:
             with st.expander("💡 Przypomnij mój kod PIN"):
                 st.info(f"Domyślny PIN dla **{reveal_account}**: `{PARTICIPANTS[reveal_account]['pin']}`")
 
@@ -773,7 +786,7 @@ elif current_stage == 2:
 # Panel Administratora również dostępny na dole strony w dyskretnym expanderze
 st.markdown("---")
 with st.expander("👑 Szybki dostęp do Panelu Administratora"):
-    bottom_admin_pin = st.text_input("Podaj PIN administratora:", type="password", key="bottom_admin_pin_input", placeholder="9999")
+    bottom_admin_pin = st.text_input("Podaj PIN administratora:", type="password", key="bottom_admin_pin_input", placeholder="Wpisz PIN")
     if bottom_admin_pin:
         if bottom_admin_pin.strip() == ADMIN_PIN:
             render_admin_panel(bottom_admin_pin)
