@@ -28,12 +28,30 @@ if is_dark_theme:
     text_color = "#f8fafc"
     card_bg = "#1e293b"
     card_border = "#334155"
+    input_bg = "#1e293b"
+    input_text = "#ffffff"
+    input_border = "#475569"
+    placeholder_color = "#94a3b8"
+    btn_sec_bg = "#1e293b"
+    btn_sec_text = "#f8fafc"
+    btn_sec_border = "#475569"
+    btn_sec_hover_bg = "#334155"
+    menu_hover_bg = "#334155"
 else:
     h_color = "#000000"
     bg_color = "#f8fafc"
     text_color = "#0f172a"
     card_bg = "#ffffff"
     card_border = "#cbd5e1"
+    input_bg = "#ffffff"
+    input_text = "#0f172a"
+    input_border = "#94a3b8"
+    placeholder_color = "#64748b"
+    btn_sec_bg = "#ffffff"
+    btn_sec_text = "#0f172a"
+    btn_sec_border = "#cbd5e1"
+    btn_sec_hover_bg = "#f1f5f9"
+    menu_hover_bg = "#fee2e2"
 
 # Style CSS z pełnym wsparciem trybu ciemnego (Dark Mode) oraz jasnego (Light Mode)
 st.markdown(f"""
@@ -91,40 +109,148 @@ st.markdown(f"""
         color: #000000 !important;
     }}
     
-    /* Zapewnienie czytelności zwykłych tekstów */
-    .stMarkdown p, .stMarkdown span, .stText, p, span, label {{
+    /* Zapewnienie czytelności zwykłych tekstów i etykiet */
+    .stMarkdown p, .stMarkdown span, .stText, p, span, label, [data-testid="stWidgetLabel"] p {{
         color: {text_color} !important;
+        font-size: 1.05rem !important;
     }}
     
-    /* Duże przyciski dotykowe */
+    /* POLA FORMULARZA: Inputy, Selectbox, NumberInput */
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"],
+    .stTextInput > div > div,
+    .stNumberInput > div > div,
+    div[data-baseweb="select"],
+    div[data-baseweb="select"] > div {{
+        background-color: {input_bg} !important;
+        border: 2px solid {input_border} !important;
+        border-radius: 12px !important;
+    }}
+
+    /* Tekst wewnątrz inputów */
+    input, textarea {{
+        background-color: {input_bg} !important;
+        color: {input_text} !important;
+        -webkit-text-fill-color: {input_text} !important;
+        font-size: 1.15rem !important;
+        padding: 10px 14px !important;
+    }}
+
+    /* Placeholdery - wysoki kontrast i czytelność */
+    input::placeholder,
+    textarea::placeholder,
+    input::-webkit-input-placeholder,
+    input:-ms-input-placeholder,
+    div[data-baseweb="input"] input::placeholder {{
+        color: {placeholder_color} !important;
+        -webkit-text-fill-color: {placeholder_color} !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
+    }}
+
+    /* Aktywne pole tekstowe (focus) */
+    div[data-baseweb="input"]:focus-within,
+    div[data-baseweb="base-input"]:focus-within,
+    div[data-baseweb="select"]:focus-within,
+    .stTextInput input:focus,
+    .stNumberInput input:focus {{
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+        background-color: {input_bg} !important;
+    }}
+
+    /* Selectbox (np. Kto teraz uzupełnia?) */
+    div[data-baseweb="select"] * {{
+        color: {input_text} !important;
+    }}
+    div[data-baseweb="select"] svg {{
+        fill: {input_text} !important;
+    }}
+
+    /* Rozwinięte menu opcji selectbox */
+    ul[data-baseweb="menu"],
+    div[data-baseweb="popover"],
+    div[data-baseweb="popover"] > div {{
+        background-color: {input_bg} !important;
+        color: {input_text} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 10px !important;
+    }}
+    li[role="option"] {{
+        background-color: {input_bg} !important;
+        color: {input_text} !important;
+    }}
+    li[role="option"]:hover,
+    li[aria-selected="true"] {{
+        background-color: {menu_hover_bg} !important;
+        color: #b91c1c !important;
+        font-weight: 700 !important;
+    }}
+
+    /* PRZYCISKI STANDARDOWE / DRUGORZĘDNE (szybkie kwoty, przełącznik motywu) */
     .stButton > button {{
-        min-height: 54px !important;
+        min-height: 52px !important;
         font-size: 1.15rem !important;
         font-weight: 700 !important;
         border-radius: 12px !important;
         padding: 12px 24px !important;
         transition: all 0.2s ease !important;
-        border: 1.5px solid transparent !important;
+        background-color: {btn_sec_bg} !important;
+        color: {btn_sec_text} !important;
+        border: 2px solid {btn_sec_border} !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
     }}
-    
-    /* Główne przyciski w świątecznym czerwonym kolorze */
-    .stButton > button[kind="primary"] {{
-        background-color: #dc2626 !important;
-        color: #ffffff !important;
-        border-color: #b91c1c !important;
-    }}
-    .stButton > button[kind="primary"]:hover {{
-        background-color: #b91c1c !important;
+    .stButton > button:hover {{
+        background-color: {btn_sec_hover_bg} !important;
+        border-color: #dc2626 !important;
+        color: #dc2626 !important;
         transform: translateY(-1px);
     }}
     
-    /* Formularze i pola wprowadzania */
-    .stSelectbox, .stTextInput, .stNumberInput {{
-        font-size: 1.15rem !important;
+    /* GŁÓWNE PRZYCISKI W ŚWIĄTECZNYM CZERWONYM KOLORZE (oraz wybrana kwota) */
+    .stButton > button[kind="primary"] {{
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+        border: 2px solid #b91c1c !important;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
     }}
-    input {{
-        font-size: 1.15rem !important;
-        padding: 10px 14px !important;
+    .stButton > button[kind="primary"]:hover {{
+        background-color: #b91c1c !important;
+        color: #ffffff !important;
+        border-color: #991b1b !important;
+        transform: translateY(-1px);
+    }}
+
+    /* Przyciski NumberInput (+ / -) */
+    button[data-testid="stNumberInputStepDown"],
+    button[data-testid="stNumberInputStepUp"] {{
+        background-color: {btn_sec_bg} !important;
+        color: {input_text} !important;
+        border: 1px solid {input_border} !important;
+    }}
+    button[data-testid="stNumberInputStepDown"]:hover,
+    button[data-testid="stNumberInputStepUp"]:hover {{
+        background-color: {btn_sec_hover_bg} !important;
+        color: #dc2626 !important;
+    }}
+    button[data-testid="stNumberInputStepDown"] svg,
+    button[data-testid="stNumberInputStepUp"] svg {{
+        fill: {input_text} !important;
+    }}
+
+    /* Element expandera */
+    [data-testid="stExpander"] {{
+        background-color: {card_bg} !important;
+        border: 1.5px solid {card_border} !important;
+        border-radius: 12px !important;
+        color: {text_color} !important;
+    }}
+    [data-testid="stExpander"] summary {{
+        color: {input_text} !important;
+        font-weight: 600 !important;
+    }}
+    [data-testid="stExpander"] svg {{
+        fill: {input_text} !important;
     }}
 
     /* Pasek stanu etapu */
@@ -659,13 +785,16 @@ if current_stage == 1:
 
             c1, c2, c3, c4 = st.columns(4)
             preset_amounts = [50, 100, 150, 200]
+            current_b_val = int(st.session_state.get("budget_number_in", 150))
             for i, val in enumerate(preset_amounts):
                 with [c1, c2, c3, c4][i]:
+                    is_selected = (val == current_b_val)
                     st.button(
-                        f"{val} zł",
+                        f"✓ {val} zł" if is_selected else f"{val} zł",
                         key=f"quick_amt_{val}",
                         on_click=set_quick_budget,
                         args=(val,),
+                        type="primary" if is_selected else "secondary",
                         use_container_width=True
                     )
 
